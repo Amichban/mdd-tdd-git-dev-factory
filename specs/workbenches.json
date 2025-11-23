@@ -254,6 +254,233 @@
         { "key": "ctrl+s", "action": "Save", "description": "Save current item" },
         { "key": "escape", "action": "Close", "description": "Close modal/panel" }
       ]
+    },
+    {
+      "name": "MarketDataSourceWorkbench",
+      "persona": "data-engineer",
+      "description": "Manage market data providers and financial data sources",
+      "entity": "MarketDataSource",
+      "theme": {
+        "primary_color": "#10B981",
+        "icon": "candlestick-chart"
+      },
+      "sections": {
+        "header": {
+          "show_breadcrumbs": true,
+          "show_persona_switcher": true,
+          "global_actions": [
+            {
+              "name": "New Provider",
+              "icon": "plus",
+              "type": "modal",
+              "shortcut": "n"
+            },
+            {
+              "name": "Import Config",
+              "icon": "upload",
+              "type": "modal"
+            },
+            {
+              "name": "Export All",
+              "icon": "download",
+              "type": "export"
+            }
+          ]
+        },
+        "data_sources": {
+          "position": "sidebar",
+          "show_status": true,
+          "show_last_sync": true,
+          "allow_multi_select": true,
+          "filters": ["provider", "environment", "fetch_status", "is_active"]
+        },
+        "quick_actions": {
+          "position": "top",
+          "actions": [
+            {
+              "name": "Fetch Data",
+              "icon": "download",
+              "type": "api_call",
+              "endpoint": "/api/market-data-sources/{id}/fetch",
+              "shortcut": "f"
+            },
+            {
+              "name": "Test Connection",
+              "icon": "plug",
+              "type": "api_call",
+              "endpoint": "/api/market-data-sources/{id}/test",
+              "shortcut": "t"
+            },
+            {
+              "name": "View Instruments",
+              "icon": "list",
+              "type": "api_call",
+              "endpoint": "/api/market-data-sources/{id}/instruments",
+              "shortcut": "i"
+            },
+            {
+              "name": "View Status",
+              "icon": "activity",
+              "type": "api_call",
+              "endpoint": "/api/market-data-sources/{id}/status",
+              "shortcut": "s"
+            }
+          ]
+        },
+        "canvas": {
+          "layout": "split-horizontal",
+          "read": {
+            "width": "55%",
+            "components": [
+              {
+                "type": "data_table",
+                "title": "Market Data Sources",
+                "entity": "MarketDataSource",
+                "config": {
+                  "columns": ["name", "provider", "environment", "fetch_status", "last_fetch_at", "records_fetched"],
+                  "row_actions": ["edit", "delete", "fetch", "test"],
+                  "bulk_actions": ["fetch", "activate", "deactivate", "delete"],
+                  "pagination": true,
+                  "page_size": 20
+                }
+              },
+              {
+                "type": "preview",
+                "title": "Available Instruments",
+                "config": {
+                  "show_instruments": true,
+                  "show_timeframes": true,
+                  "max_rows": 100
+                }
+              }
+            ]
+          },
+          "write": {
+            "width": "45%",
+            "components": [
+              {
+                "type": "form",
+                "title": "Provider Configuration",
+                "entity": "MarketDataSource",
+                "config": {
+                  "mode": "create_edit",
+                  "sections": [
+                    {
+                      "name": "Basic Info",
+                      "fields": ["name", "provider", "environment", "is_active"]
+                    },
+                    {
+                      "name": "Authentication",
+                      "fields": ["api_key", "api_secret", "account_id"]
+                    },
+                    {
+                      "name": "Data Selection",
+                      "fields": ["instruments", "timeframes"],
+                      "display": "multi_select"
+                    },
+                    {
+                      "name": "Settings",
+                      "fields": ["base_url", "rate_limit", "metadata"]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "agent": {
+          "position": "sidebar",
+          "width": "320px",
+          "capabilities": ["suggest", "generate", "explain", "debug", "optimize", "build_source"],
+          "context_aware": true,
+          "show_suggestions": true,
+          "auto_complete": true,
+          "prompts": [
+            {
+              "name": "Setup Oanda",
+              "description": "Help me configure an Oanda data source",
+              "template": "I want to set up an Oanda market data source for {instruments} with {timeframes} timeframe(s)"
+            },
+            {
+              "name": "Debug Connection",
+              "description": "Troubleshoot connection issues",
+              "template": "Help me debug why my {provider} connection is failing with error: {error_message}"
+            },
+            {
+              "name": "Optimize Fetch",
+              "description": "Optimize data fetching performance",
+              "template": "How can I optimize fetching data from {provider} for better performance?"
+            }
+          ]
+        },
+        "explainability": {
+          "position": "panel",
+          "show_timeline": true,
+          "show_decisions": true,
+          "show_formulas": false,
+          "detail_levels": ["summary", "detailed", "technical"],
+          "event_types": [
+            "fetch_started",
+            "fetch_completed",
+            "fetch_failed",
+            "connection_tested",
+            "rate_limited",
+            "instruments_retrieved"
+          ]
+        },
+        "tools": {
+          "position": "toolbar",
+          "tools": [
+            {
+              "name": "API Explorer",
+              "icon": "globe",
+              "type": "explorer",
+              "description": "Explore provider API endpoints"
+            },
+            {
+              "name": "Instrument Finder",
+              "icon": "search",
+              "type": "search",
+              "description": "Search for available instruments"
+            },
+            {
+              "name": "Rate Monitor",
+              "icon": "activity",
+              "type": "monitor",
+              "description": "Monitor API rate limits"
+            },
+            {
+              "name": "Data Quality",
+              "icon": "check-circle",
+              "type": "validator",
+              "description": "Check data quality metrics"
+            }
+          ]
+        },
+        "tasks": {
+          "position": "sidebar",
+          "show_progress": true,
+          "show_history": true,
+          "filters": ["active", "pending", "completed", "failed", "rate_limited"]
+        },
+        "messages": {
+          "position": "toast",
+          "show_history": true,
+          "auto_dismiss": true,
+          "types": ["info", "success", "warning", "error", "rate_limit"]
+        }
+      },
+      "shortcuts": [
+        { "key": "n", "action": "New Provider", "description": "Add new market data provider" },
+        { "key": "f", "action": "Fetch", "description": "Fetch data from selected source" },
+        { "key": "t", "action": "Test", "description": "Test connection" },
+        { "key": "i", "action": "Instruments", "description": "View available instruments" },
+        { "key": "s", "action": "Status", "description": "View detailed status" },
+        { "key": "/", "action": "Search", "description": "Search sources" },
+        { "key": "?", "action": "Help", "description": "Show keyboard shortcuts" },
+        { "key": "ctrl+s", "action": "Save", "description": "Save current item" },
+        { "key": "escape", "action": "Close", "description": "Close modal/panel" }
+      ]
     }
   ]
 }

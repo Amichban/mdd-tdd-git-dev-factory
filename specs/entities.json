@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "entities": [
     {
+      "id": "raw_data_source",
       "name": "RawDataSource",
       "description": "External data source configuration for ingestion pipelines",
       "layer": "infrastructure",
@@ -132,6 +133,214 @@
         "list_fields": ["name", "source_type", "sync_status", "last_sync_at"],
         "search_fields": ["name"],
         "filter_fields": ["source_type", "is_active", "sync_status"]
+      }
+    },
+    {
+      "id": "market_data_source",
+      "name": "MarketDataSource",
+      "description": "Market data provider configuration for financial data ingestion",
+      "layer": "infrastructure",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "primary_key": true,
+          "description": "Unique identifier"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "max_length": 100,
+          "description": "Human-readable name for the market data source"
+        },
+        {
+          "name": "provider",
+          "type": "enum",
+          "required": true,
+          "values": ["oanda", "interactive_brokers", "alpaca", "binance", "coinbase", "yahoo_finance", "polygon", "custom"],
+          "description": "Market data provider"
+        },
+        {
+          "name": "api_key",
+          "type": "string",
+          "required": false,
+          "sensitive": true,
+          "description": "API key for authentication"
+        },
+        {
+          "name": "api_secret",
+          "type": "string",
+          "required": false,
+          "sensitive": true,
+          "description": "API secret for authentication"
+        },
+        {
+          "name": "account_id",
+          "type": "string",
+          "required": false,
+          "description": "Account/Practice account ID"
+        },
+        {
+          "name": "environment",
+          "type": "enum",
+          "required": true,
+          "default": "practice",
+          "values": ["practice", "live"],
+          "description": "Trading environment"
+        },
+        {
+          "name": "base_url",
+          "type": "string",
+          "required": false,
+          "description": "Custom API base URL"
+        },
+        {
+          "name": "instruments",
+          "type": "json",
+          "required": false,
+          "description": "List of instruments to fetch (e.g., ['EUR_USD', 'GBP_USD'])"
+        },
+        {
+          "name": "timeframes",
+          "type": "json",
+          "required": false,
+          "description": "List of timeframes to fetch (e.g., ['M1', 'H1', 'D'])"
+        },
+        {
+          "name": "rate_limit",
+          "type": "integer",
+          "required": false,
+          "default": 100,
+          "min": 1,
+          "description": "API requests per minute limit"
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "required": true,
+          "default": true,
+          "description": "Whether the source is currently active"
+        },
+        {
+          "name": "last_fetch_at",
+          "type": "datetime",
+          "required": false,
+          "description": "Timestamp of last successful data fetch"
+        },
+        {
+          "name": "fetch_status",
+          "type": "enum",
+          "required": true,
+          "default": "pending",
+          "values": ["pending", "fetching", "success", "failed", "rate_limited"],
+          "description": "Current fetch status"
+        },
+        {
+          "name": "records_fetched",
+          "type": "integer",
+          "required": false,
+          "default": 0,
+          "description": "Total records fetched in last sync"
+        },
+        {
+          "name": "error_message",
+          "type": "string",
+          "required": false,
+          "description": "Last error message if fetch failed"
+        },
+        {
+          "name": "metadata",
+          "type": "json",
+          "required": false,
+          "description": "Additional provider-specific configuration"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "required": true,
+          "auto_now_add": true,
+          "description": "Creation timestamp"
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "required": true,
+          "auto_now": true,
+          "description": "Last update timestamp"
+        }
+      ],
+      "indexes": [
+        {
+          "fields": ["name"],
+          "unique": true
+        },
+        {
+          "fields": ["provider", "is_active"]
+        },
+        {
+          "fields": ["fetch_status"]
+        },
+        {
+          "fields": ["environment"]
+        }
+      ],
+      "api": {
+        "generate": true,
+        "endpoints": ["list", "get", "create", "update", "delete"],
+        "custom_endpoints": [
+          {
+            "name": "fetch",
+            "method": "POST",
+            "path": "/{id}/fetch",
+            "description": "Trigger manual data fetch from this source"
+          },
+          {
+            "name": "test_connection",
+            "method": "POST",
+            "path": "/{id}/test",
+            "description": "Test API connection and credentials"
+          },
+          {
+            "name": "get_instruments",
+            "method": "GET",
+            "path": "/{id}/instruments",
+            "description": "Get available instruments from this provider"
+          },
+          {
+            "name": "get_status",
+            "method": "GET",
+            "path": "/{id}/status",
+            "description": "Get detailed status and statistics"
+          }
+        ]
+      },
+      "ui": {
+        "icon": "candlestick-chart",
+        "color": "#10B981",
+        "list_fields": ["name", "provider", "environment", "fetch_status", "last_fetch_at"],
+        "search_fields": ["name", "provider"],
+        "filter_fields": ["provider", "is_active", "fetch_status", "environment"],
+        "actions": [
+          {
+            "name": "Fetch Data",
+            "icon": "download",
+            "endpoint": "fetch",
+            "confirm": false
+          },
+          {
+            "name": "Test Connection",
+            "icon": "plug",
+            "endpoint": "test_connection",
+            "confirm": false
+          },
+          {
+            "name": "View Instruments",
+            "icon": "list",
+            "endpoint": "get_instruments",
+            "confirm": false
+          }
+        ]
       }
     }
   ]
