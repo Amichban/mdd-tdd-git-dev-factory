@@ -131,24 +131,32 @@ else
 fi
 
 # ============================================
-# Check 3: Run tests
+# Check 3: Run tests (MANDATORY)
 # ============================================
 echo -n "  Running tests... "
 
-if [ -d "tests" ] && command -v pytest &> /dev/null; then
-    # Run tests quietly, only show output on failure
-    if pytest tests/ -q --tb=no > /tmp/pytest_output.txt 2>&1; then
+if [ ! -d "tests" ]; then
+    echo -e "${RED}FAILED${NC}"
+    echo "    ❌ No tests directory found"
+    echo "    ${YELLOW}→ Tests are mandatory. Create tests/ directory with test files${NC}"
+    FAILED=1
+elif ! command -v pytest &> /dev/null; then
+    echo -e "${RED}FAILED${NC}"
+    echo "    ❌ pytest not found"
+    echo "    ${YELLOW}→ Install: pip install pytest pytest-cov${NC}"
+    FAILED=1
+else
+    # Run tests with coverage check
+    if pytest tests/ -q --tb=short --cov=src --cov-fail-under=80 > /tmp/pytest_output.txt 2>&1; then
         echo -e "${GREEN}OK${NC}"
+        # Show coverage summary
+        grep -E "^TOTAL|^Name" /tmp/pytest_output.txt | tail -2
     else
         echo -e "${RED}FAILED${NC}"
-        echo "    ❌ Tests failed:"
-        cat /tmp/pytest_output.txt | head -20
+        echo "    ❌ Tests failed or coverage below 80%:"
+        cat /tmp/pytest_output.txt | tail -30
         FAILED=1
     fi
-elif [ -d "tests" ]; then
-    echo -e "${YELLOW}SKIPPED${NC} (pytest not found)"
-else
-    echo -e "${YELLOW}SKIPPED${NC} (no tests directory)"
 fi
 
 # ============================================

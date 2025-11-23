@@ -3,105 +3,256 @@
   "version": "1.0.0",
   "workbenches": [
     {
-      "name": "DataSourceWorkbench",
-      "description": "Manage and monitor raw data sources",
+      "name": "DataEngineerWorkbench",
+      "persona": "data-engineer",
+      "description": "Manage data sources, pipelines, and transformations",
       "entity": "RawDataSource",
-      "role": "data-engineer",
-      "layout": {
-        "style": "bento",
-        "zones": {
-          "A": {
-            "name": "Pulse",
-            "width": "20%",
-            "components": [
-              {
-                "type": "stats_card",
-                "title": "Active Sources",
-                "metric": "count",
-                "filter": { "is_active": true }
-              },
-              {
-                "type": "stats_card",
-                "title": "Failed Syncs",
-                "metric": "count",
-                "filter": { "sync_status": "failed" },
-                "alert_threshold": 1
-              },
-              {
-                "type": "activity_feed",
-                "title": "Recent Activity",
-                "events": ["sync_started", "sync_completed", "sync_failed"],
-                "limit": 10
-              }
-            ]
-          },
-          "B": {
-            "name": "Canvas",
-            "width": "50%",
+      "theme": {
+        "primary_color": "#3B82F6",
+        "icon": "database"
+      },
+      "sections": {
+        "header": {
+          "show_breadcrumbs": true,
+          "show_persona_switcher": true,
+          "global_actions": [
+            {
+              "name": "New Source",
+              "icon": "plus",
+              "type": "modal",
+              "shortcut": "n"
+            },
+            {
+              "name": "Import Config",
+              "icon": "upload",
+              "type": "modal"
+            },
+            {
+              "name": "Export All",
+              "icon": "download",
+              "type": "export"
+            }
+          ]
+        },
+        "data_sources": {
+          "position": "sidebar",
+          "show_status": true,
+          "show_last_sync": true,
+          "allow_multi_select": true,
+          "filters": ["source_type", "sync_status", "is_active"]
+        },
+        "quick_actions": {
+          "position": "top",
+          "actions": [
+            {
+              "name": "Sync Selected",
+              "icon": "refresh",
+              "type": "api_call",
+              "endpoint": "/api/raw-data-sources/sync-all",
+              "shortcut": "s"
+            },
+            {
+              "name": "Test Connection",
+              "icon": "plug",
+              "type": "api_call",
+              "shortcut": "t"
+            },
+            {
+              "name": "View Lineage",
+              "icon": "git-branch",
+              "type": "navigate",
+              "shortcut": "l"
+            },
+            {
+              "name": "Run Validation",
+              "icon": "check-circle",
+              "type": "api_call",
+              "shortcut": "v"
+            },
+            {
+              "name": "Generate Schema",
+              "icon": "code",
+              "type": "generate",
+              "shortcut": "g"
+            }
+          ]
+        },
+        "canvas": {
+          "layout": "split-horizontal",
+          "read": {
+            "width": "55%",
             "components": [
               {
                 "type": "data_table",
                 "title": "Data Sources",
-                "columns": ["name", "source_type", "sync_status", "last_sync_at"],
-                "actions": ["edit", "delete", "sync", "test_connection"],
-                "row_click": "open_detail",
-                "search": true,
-                "filters": ["source_type", "is_active", "sync_status"],
-                "pagination": true
+                "entity": "RawDataSource",
+                "config": {
+                  "columns": ["name", "source_type", "sync_status", "last_sync_at", "is_active"],
+                  "row_actions": ["edit", "delete", "sync", "test"],
+                  "bulk_actions": ["sync", "activate", "deactivate", "delete"],
+                  "pagination": true,
+                  "page_size": 20
+                }
+              },
+              {
+                "type": "preview",
+                "title": "Data Preview",
+                "config": {
+                  "show_schema": true,
+                  "show_sample_data": true,
+                  "max_rows": 100
+                }
               }
             ]
           },
-          "C": {
-            "name": "Co-Pilot",
-            "width": "30%",
+          "write": {
+            "width": "45%",
             "components": [
               {
-                "type": "detail_panel",
-                "title": "Source Details",
-                "sections": [
-                  {
-                    "name": "Configuration",
-                    "fields": ["name", "source_type", "connection_string", "refresh_interval"]
-                  },
-                  {
-                    "name": "Schema",
-                    "fields": ["schema_definition"],
-                    "display": "code"
-                  },
-                  {
-                    "name": "Status",
-                    "fields": ["sync_status", "last_sync_at", "error_message"]
-                  }
-                ]
+                "type": "form",
+                "title": "Source Configuration",
+                "entity": "RawDataSource",
+                "config": {
+                  "mode": "create_edit",
+                  "sections": [
+                    {
+                      "name": "Basic Info",
+                      "fields": ["name", "source_type", "is_active"]
+                    },
+                    {
+                      "name": "Connection",
+                      "fields": ["connection_string", "refresh_interval"]
+                    },
+                    {
+                      "name": "Schema",
+                      "fields": ["schema_definition"],
+                      "display": "code_editor"
+                    },
+                    {
+                      "name": "Metadata",
+                      "fields": ["metadata", "tags"]
+                    }
+                  ]
+                }
               },
               {
-                "type": "explainability",
-                "title": "Sync History",
-                "event_types": ["job_started", "job_completed", "job_failed", "decision_evaluated"]
+                "type": "sql_editor",
+                "title": "Query Editor",
+                "config": {
+                  "syntax": "sql",
+                  "auto_complete": true,
+                  "run_button": true,
+                  "save_queries": true
+                }
               }
             ]
           }
+        },
+        "flow": {
+          "enabled": true,
+          "position": "canvas",
+          "node_types": ["source", "transform", "sink", "validator", "aggregator"],
+          "edge_types": ["data_flow", "dependency", "trigger"],
+          "interactions": {
+            "can_create_nodes": true,
+            "can_create_edges": true,
+            "can_delete": true,
+            "can_edit_inline": true
+          },
+          "minimap": true,
+          "controls": true
+        },
+        "agent": {
+          "position": "sidebar",
+          "width": "320px",
+          "capabilities": ["suggest", "generate", "explain", "debug", "optimize", "document"],
+          "context_aware": true,
+          "show_suggestions": true,
+          "auto_complete": true
+        },
+        "explainability": {
+          "position": "panel",
+          "show_timeline": true,
+          "show_decisions": true,
+          "show_formulas": true,
+          "detail_levels": ["summary", "detailed", "technical"],
+          "event_types": [
+            "job_started",
+            "job_completed",
+            "job_failed",
+            "decision_evaluated",
+            "result_computed",
+            "validation_passed",
+            "validation_failed"
+          ]
+        },
+        "tools": {
+          "position": "toolbar",
+          "tools": [
+            {
+              "name": "Schema Validator",
+              "icon": "check",
+              "type": "validator",
+              "description": "Validate JSON schema definitions",
+              "shortcut": "ctrl+shift+v"
+            },
+            {
+              "name": "JSON Formatter",
+              "icon": "code",
+              "type": "formatter",
+              "description": "Format and prettify JSON",
+              "shortcut": "ctrl+shift+f"
+            },
+            {
+              "name": "SQL to Schema",
+              "icon": "database",
+              "type": "converter",
+              "description": "Convert SQL DDL to JSON schema"
+            },
+            {
+              "name": "Connection Tester",
+              "icon": "plug",
+              "type": "analyzer",
+              "description": "Test database/API connections"
+            },
+            {
+              "name": "Mock Data Generator",
+              "icon": "shuffle",
+              "type": "generator",
+              "description": "Generate sample data from schema"
+            },
+            {
+              "name": "Query Debugger",
+              "icon": "bug",
+              "type": "debugger",
+              "description": "Debug and profile SQL queries"
+            }
+          ]
+        },
+        "tasks": {
+          "position": "sidebar",
+          "show_progress": true,
+          "show_history": true,
+          "filters": ["active", "pending", "completed", "failed"]
+        },
+        "messages": {
+          "position": "toast",
+          "show_history": true,
+          "auto_dismiss": true,
+          "types": ["info", "success", "warning", "error", "system"]
         }
       },
-      "actions": [
-        {
-          "name": "Create Source",
-          "icon": "plus",
-          "type": "modal",
-          "form": "create"
-        },
-        {
-          "name": "Sync All",
-          "icon": "refresh",
-          "type": "bulk_action",
-          "endpoint": "/api/raw-data-sources/sync-all",
-          "confirm": true
-        }
-      ],
       "shortcuts": [
-        { "key": "n", "action": "Create Source" },
-        { "key": "r", "action": "Refresh" },
-        { "key": "/", "action": "Search" }
+        { "key": "n", "action": "New Source", "description": "Create new data source" },
+        { "key": "s", "action": "Sync", "description": "Sync selected sources" },
+        { "key": "t", "action": "Test", "description": "Test connection" },
+        { "key": "l", "action": "Lineage", "description": "View data lineage" },
+        { "key": "g", "action": "Generate", "description": "Generate schema" },
+        { "key": "/", "action": "Search", "description": "Search sources" },
+        { "key": "?", "action": "Help", "description": "Show keyboard shortcuts" },
+        { "key": "ctrl+enter", "action": "Run Query", "description": "Execute SQL query" },
+        { "key": "ctrl+s", "action": "Save", "description": "Save current item" },
+        { "key": "escape", "action": "Close", "description": "Close modal/panel" }
       ]
     }
   ]

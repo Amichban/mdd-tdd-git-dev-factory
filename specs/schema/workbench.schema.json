@@ -1,0 +1,297 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Workbench Schema",
+  "description": "Schema for persona-specific workbenches with standard sections",
+  "type": "object",
+  "required": ["$schema", "version", "workbenches"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "type": "string" },
+    "workbenches": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/workbench" }
+    }
+  },
+  "definitions": {
+    "workbench": {
+      "type": "object",
+      "required": ["name", "persona", "sections"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique workbench identifier"
+        },
+        "persona": {
+          "type": "string",
+          "description": "Target persona (data-engineer, ml-engineer, analyst, etc.)",
+          "enum": ["data-engineer", "ml-engineer", "data-analyst", "platform-admin", "business-user"]
+        },
+        "description": {
+          "type": "string",
+          "description": "What this workbench is for"
+        },
+        "entity": {
+          "type": "string",
+          "description": "Primary entity this workbench manages"
+        },
+        "theme": {
+          "type": "object",
+          "properties": {
+            "primary_color": { "type": "string" },
+            "icon": { "type": "string" }
+          }
+        },
+        "sections": { "$ref": "#/definitions/sections" },
+        "shortcuts": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/shortcut" }
+        }
+      }
+    },
+    "sections": {
+      "type": "object",
+      "description": "Standard workbench sections - each persona gets all sections",
+      "required": ["header", "canvas", "agent"],
+      "properties": {
+        "header": { "$ref": "#/definitions/headerSection" },
+        "data_sources": { "$ref": "#/definitions/dataSourcesSection" },
+        "quick_actions": { "$ref": "#/definitions/quickActionsSection" },
+        "canvas": { "$ref": "#/definitions/canvasSection" },
+        "flow": { "$ref": "#/definitions/flowSection" },
+        "agent": { "$ref": "#/definitions/agentSection" },
+        "explainability": { "$ref": "#/definitions/explainabilitySection" },
+        "tools": { "$ref": "#/definitions/toolsSection" },
+        "tasks": { "$ref": "#/definitions/tasksSection" },
+        "messages": { "$ref": "#/definitions/messagesSection" }
+      }
+    },
+    "headerSection": {
+      "type": "object",
+      "description": "Top bar with title, breadcrumbs, global actions",
+      "properties": {
+        "show_breadcrumbs": { "type": "boolean", "default": true },
+        "show_persona_switcher": { "type": "boolean", "default": true },
+        "global_actions": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/action" }
+        }
+      }
+    },
+    "dataSourcesSection": {
+      "type": "object",
+      "description": "Data source selector and status",
+      "properties": {
+        "position": { "type": "string", "enum": ["sidebar", "header", "modal"], "default": "sidebar" },
+        "show_status": { "type": "boolean", "default": true },
+        "show_last_sync": { "type": "boolean", "default": true },
+        "allow_multi_select": { "type": "boolean", "default": false },
+        "filters": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "quickActionsSection": {
+      "type": "object",
+      "description": "Quick action buttons for common operations",
+      "properties": {
+        "position": { "type": "string", "enum": ["top", "floating", "sidebar"], "default": "top" },
+        "actions": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/action" }
+        }
+      }
+    },
+    "canvasSection": {
+      "type": "object",
+      "description": "Main workspace with read and write areas",
+      "required": ["read", "write"],
+      "properties": {
+        "layout": {
+          "type": "string",
+          "enum": ["split-horizontal", "split-vertical", "tabbed", "overlay"],
+          "default": "split-horizontal"
+        },
+        "read": {
+          "type": "object",
+          "description": "Read-only view area (data tables, previews)",
+          "properties": {
+            "width": { "type": "string", "default": "60%" },
+            "components": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/canvasComponent" }
+            }
+          }
+        },
+        "write": {
+          "type": "object",
+          "description": "Editable area (forms, code editors)",
+          "properties": {
+            "width": { "type": "string", "default": "40%" },
+            "components": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/canvasComponent" }
+            }
+          }
+        }
+      }
+    },
+    "flowSection": {
+      "type": "object",
+      "description": "React Flow graph visualization",
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "position": { "type": "string", "enum": ["canvas", "modal", "panel"], "default": "canvas" },
+        "node_types": {
+          "type": "array",
+          "description": "Types of nodes to display",
+          "items": { "type": "string" }
+        },
+        "edge_types": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "interactions": {
+          "type": "object",
+          "properties": {
+            "can_create_nodes": { "type": "boolean", "default": true },
+            "can_create_edges": { "type": "boolean", "default": true },
+            "can_delete": { "type": "boolean", "default": true },
+            "can_edit_inline": { "type": "boolean", "default": true }
+          }
+        },
+        "minimap": { "type": "boolean", "default": true },
+        "controls": { "type": "boolean", "default": true }
+      }
+    },
+    "agentSection": {
+      "type": "object",
+      "description": "AI agent chat and suggestions",
+      "properties": {
+        "position": { "type": "string", "enum": ["sidebar", "bottom", "floating"], "default": "sidebar" },
+        "width": { "type": "string", "default": "300px" },
+        "capabilities": {
+          "type": "array",
+          "description": "What the agent can do in this workbench",
+          "items": {
+            "type": "string",
+            "enum": ["suggest", "generate", "explain", "debug", "optimize", "document"]
+          }
+        },
+        "context_aware": { "type": "boolean", "default": true },
+        "show_suggestions": { "type": "boolean", "default": true },
+        "auto_complete": { "type": "boolean", "default": true }
+      }
+    },
+    "explainabilitySection": {
+      "type": "object",
+      "description": "Decision trail and algorithm explanations",
+      "properties": {
+        "position": { "type": "string", "enum": ["sidebar", "panel", "modal"], "default": "panel" },
+        "show_timeline": { "type": "boolean", "default": true },
+        "show_decisions": { "type": "boolean", "default": true },
+        "show_formulas": { "type": "boolean", "default": true },
+        "detail_levels": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["summary", "detailed", "technical"] },
+          "default": ["summary", "detailed", "technical"]
+        },
+        "event_types": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "toolsSection": {
+      "type": "object",
+      "description": "Persona-specific tools and utilities",
+      "properties": {
+        "position": { "type": "string", "enum": ["sidebar", "toolbar", "menu"], "default": "toolbar" },
+        "tools": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/tool" }
+        }
+      }
+    },
+    "tasksSection": {
+      "type": "object",
+      "description": "Active and pending tasks",
+      "properties": {
+        "position": { "type": "string", "enum": ["sidebar", "bottom", "modal"], "default": "sidebar" },
+        "show_progress": { "type": "boolean", "default": true },
+        "show_history": { "type": "boolean", "default": true },
+        "filters": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["active", "pending", "completed", "failed"] }
+        }
+      }
+    },
+    "messagesSection": {
+      "type": "object",
+      "description": "Notifications, alerts, and system messages",
+      "properties": {
+        "position": { "type": "string", "enum": ["top", "bottom", "toast"], "default": "toast" },
+        "show_history": { "type": "boolean", "default": true },
+        "auto_dismiss": { "type": "boolean", "default": true },
+        "types": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["info", "success", "warning", "error", "system"] }
+        }
+      }
+    },
+    "canvasComponent": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "data_table", "code_editor", "form", "preview", "chart",
+            "json_viewer", "markdown", "sql_editor", "terminal"
+          ]
+        },
+        "title": { "type": "string" },
+        "entity": { "type": "string" },
+        "config": { "type": "object" }
+      }
+    },
+    "action": {
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": { "type": "string" },
+        "icon": { "type": "string" },
+        "type": {
+          "type": "string",
+          "enum": ["modal", "api_call", "navigate", "generate", "export"]
+        },
+        "shortcut": { "type": "string" },
+        "confirm": { "type": "boolean", "default": false },
+        "endpoint": { "type": "string" }
+      }
+    },
+    "tool": {
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": { "type": "string" },
+        "icon": { "type": "string" },
+        "type": {
+          "type": "string",
+          "enum": ["validator", "formatter", "converter", "analyzer", "generator", "debugger"]
+        },
+        "description": { "type": "string" },
+        "shortcut": { "type": "string" }
+      }
+    },
+    "shortcut": {
+      "type": "object",
+      "required": ["key", "action"],
+      "properties": {
+        "key": { "type": "string" },
+        "action": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    }
+  }
+}
