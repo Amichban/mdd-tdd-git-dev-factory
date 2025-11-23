@@ -1,13 +1,14 @@
-.PHONY: help install dev up down build test lint generate clean deploy-vercel feedback
+.PHONY: help install dev up down build test lint generate clean deploy-vercel feedback architect validate-9box
 
 # Default target
 help:
-	@echo "Development Platform - Available Commands"
-	@echo "=========================================="
+	@echo "MDD TDD Git Dev Factory - Available Commands"
+	@echo "============================================="
 	@echo ""
 	@echo "  Setup & Install:"
 	@echo "    make install      - Install all dependencies"
 	@echo "    make setup        - Full setup (install + build + db)"
+	@echo "    make hooks        - Enable git hooks"
 	@echo ""
 	@echo "  Development:"
 	@echo "    make dev          - Start all services for development"
@@ -15,6 +16,11 @@ help:
 	@echo "    make down         - Stop all services"
 	@echo "    make logs         - View logs from all services"
 	@echo "    make shell        - Open shell in backend container"
+	@echo ""
+	@echo "  9-Box Architecture:"
+	@echo "    make architect    - Generate 9-box spec from user story"
+	@echo "    make validate-9box - Validate architecture specs"
+	@echo "    make graph        - Show business graph"
 	@echo ""
 	@echo "  Testing:"
 	@echo "    make test         - Run all tests"
@@ -30,6 +36,10 @@ help:
 	@echo "    make generate     - Generate code from specs"
 	@echo "    make validate     - Validate specs against schema"
 	@echo ""
+	@echo "  GitHub Workflow:"
+	@echo "    make issue        - Create GitHub issue"
+	@echo "    make implement    - Implement from issue"
+	@echo ""
 	@echo "  Build & Deploy:"
 	@echo "    make build        - Build Docker images"
 	@echo "    make build-prod   - Build production images"
@@ -39,7 +49,8 @@ help:
 	@echo "    make db-migrate   - Run database migrations"
 	@echo "    make db-reset     - Reset database"
 	@echo ""
-	@echo "  Cleanup:"
+	@echo "  Utilities:"
+	@echo "    make feedback     - Add problems/enhancements"
 	@echo "    make clean        - Remove all containers and volumes"
 
 # ===========================================
@@ -52,7 +63,7 @@ install:
 	npm install
 	@echo "✅ Dependencies installed"
 
-setup: install
+setup: install hooks
 	@echo "🔧 Setting up development environment..."
 	cp -n .env.example .env || true
 	docker compose build
@@ -61,6 +72,12 @@ setup: install
 	make db-migrate
 	make generate
 	@echo "✅ Setup complete! Run 'make dev' to start"
+
+hooks:
+	@echo "🔗 Enabling git hooks..."
+	git config core.hooksPath .githooks
+	chmod +x .githooks/*
+	@echo "✅ Git hooks enabled"
 
 # ===========================================
 # Development
@@ -92,6 +109,40 @@ shell:
 
 shell-db:
 	docker compose exec db psql -U postgres -d quantx
+
+# ===========================================
+# 9-Box Architecture
+# ===========================================
+
+architect:
+	@echo "🏗️  Generating 9-box architecture spec..."
+	@read -p "Enter user story: " story; \
+	claude @architect "$$story"
+
+validate-9box:
+	@echo "✅ Validating architecture specs..."
+	@for f in specs/architecture/*.json; do \
+		echo "  Checking $$f..."; \
+		python -c "import json; json.load(open('$$f'))"; \
+	done
+	@echo "✅ All architecture specs valid"
+
+graph:
+	@echo "📊 Business Graph Nodes:"
+	@find specs/architecture -name "*.json" -exec jq -r '.graph_nodes[]? | "  [\(.type)] \(.id) - \(.label)"' {} \; 2>/dev/null || echo "  No architecture specs found"
+
+# ===========================================
+# GitHub Workflow
+# ===========================================
+
+issue:
+	@echo "📋 Creating GitHub issue..."
+	gh issue create
+
+implement:
+	@echo "🚀 Implementing from issue..."
+	@read -p "Enter issue number: " num; \
+	python -c "from pathlib import Path; from services.orchestrator import Orchestrator; Orchestrator(Path('.')).implement_issue($$num)"
 
 # ===========================================
 # Testing
