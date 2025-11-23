@@ -24,6 +24,40 @@ NC='\033[0m' # No Color
 FAILED=0
 
 # ============================================
+# Check 0: Verify GitHub issue exists (Issue-First Workflow)
+# ============================================
+echo -n "  Checking for GitHub issue reference... "
+
+# Get current branch name
+BRANCH_NAME=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")
+
+# Check if branch follows issue pattern: issue-<number>-* or feature/<number>-*
+ISSUE_BRANCH_PATTERN="^(issue|feature|fix|bugfix)-([0-9]+)"
+ISSUE_NUMBER=""
+
+if [[ "$BRANCH_NAME" =~ $ISSUE_BRANCH_PATTERN ]]; then
+    ISSUE_NUMBER="${BASH_REMATCH[2]}"
+    echo -e "${GREEN}OK${NC} (branch references issue #$ISSUE_NUMBER)"
+elif [[ "$BRANCH_NAME" == "main" || "$BRANCH_NAME" == "master" || "$BRANCH_NAME" == "develop" ]]; then
+    # On main branches, check commit message for issue reference
+    # This will be validated in prepare-commit-msg or commit-msg hook
+    echo -e "${YELLOW}WARNING${NC} (on $BRANCH_NAME - commit msg must reference issue)"
+    echo -e "    ${YELLOW}→ Use: git commit -m 'Your message #123' or 'fixes #123'${NC}"
+else
+    echo -e "${RED}FAILED${NC}"
+    echo "    ❌ Branch name must reference a GitHub issue"
+    echo "    ${YELLOW}→ Create an issue first: gh issue create${NC}"
+    echo "    ${YELLOW}→ Then create branch: git checkout -b issue-<number>-description${NC}"
+    echo ""
+    echo "    Valid branch patterns:"
+    echo "      - issue-123-add-feature"
+    echo "      - feature-456-new-module"
+    echo "      - fix-789-bug-description"
+    echo "      - bugfix-101-error-handling"
+    FAILED=1
+fi
+
+# ============================================
 # Check 1: Validate JSON specs against schema
 # ============================================
 echo -n "  Validating JSON specs... "
