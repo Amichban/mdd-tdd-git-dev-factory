@@ -10,6 +10,9 @@ import { ActionCard } from './ActionCard'
 import { DataTable } from './DataTable'
 import { StatusBadge } from './StatusBadge'
 import { AlertWidget } from './AlertWidget'
+import { FormWidget } from './FormWidget'
+import { ChartWidget } from './ChartWidget'
+import { TimelineWidget } from './TimelineWidget'
 
 // GenUI Contract types
 export interface GenUIWidget {
@@ -107,12 +110,33 @@ export function GenUIRenderer({ widget, onCommand }: GenUIRendererProps) {
       )
 
     case 'FORM':
+      return (
+        <FormWidget
+          title={widget.props.title || 'Form'}
+          description={widget.props.description}
+          fields={widget.props.data?.fields || []}
+          submitLabel={widget.props.data?.submitLabel}
+          onSubmit={(data) => handleCommand('form_submit', data)}
+        />
+      )
+
     case 'CHART':
+      return (
+        <ChartWidget
+          title={widget.props.title || 'Chart'}
+          type={widget.props.data?.type || 'bar'}
+          data={widget.props.data?.chartData || { labels: [], datasets: [] }}
+          height={widget.props.data?.height}
+        />
+      )
+
     case 'TIMELINE':
       return (
-        <div className="p-4 bg-gray-50 text-gray-600 rounded-lg">
-          Widget type "{widget.widget_type}" coming soon
-        </div>
+        <TimelineWidget
+          title={widget.props.title || 'Timeline'}
+          events={widget.props.data?.events || []}
+          maxEvents={widget.props.data?.maxEvents}
+        />
       )
 
     default:

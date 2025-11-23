@@ -1,4 +1,4 @@
-.PHONY: help install dev up down build test lint generate clean deploy-vercel feedback architect validate-9box
+.PHONY: help install dev up down build test lint generate compile compile-clean generate-types validate mcp-server spec-snapshot spec-bump clean deploy-vercel feedback architect validate-9box
 
 # Default target
 help:
@@ -34,7 +34,17 @@ help:
 	@echo ""
 	@echo "  Code Generation:"
 	@echo "    make generate     - Generate code from specs"
+	@echo "    make compile      - Compile all specs (unified)"
+	@echo "    make compile-clean - Clean and recompile all"
+	@echo "    make generate-types - Generate TypeScript types"
 	@echo "    make validate     - Validate specs against schema"
+	@echo ""
+	@echo "  MCP Server:"
+	@echo "    make mcp-server   - Start MCP server for Claude"
+	@echo ""
+	@echo "  Versioning:"
+	@echo "    make spec-snapshot - Create spec snapshot"
+	@echo "    make spec-bump    - Bump spec version"
 	@echo ""
 	@echo "  GitHub Workflow:"
 	@echo "    make issue        - Create GitHub issue"
@@ -191,9 +201,48 @@ generate:
 	python generators/generate_all.py
 	@echo "✅ Code generation complete"
 
+compile:
+	@echo "⚙️  Compiling all specs..."
+	python generators/compile_specs.py
+	@echo "✅ Compilation complete"
+
+compile-clean:
+	@echo "🧹 Cleaning and recompiling..."
+	python generators/compile_specs.py --clean --manifest
+	@echo "✅ Clean compilation complete"
+
+generate-types:
+	@echo "⚙️  Generating TypeScript types..."
+	python generators/generate_types.py
+	@echo "✅ TypeScript types generated"
+
 validate:
 	@echo "✅ Validating specs..."
 	python generators/generate_all.py --validate-only
+
+# ===========================================
+# MCP Server
+# ===========================================
+
+mcp-server:
+	@echo "🤖 Starting MCP server..."
+	python mcp/server.py
+
+# ===========================================
+# Versioning
+# ===========================================
+
+spec-snapshot:
+	@echo "📸 Creating spec snapshot..."
+	@read -p "Spec type (entities/workflows/algorithms): " type; \
+	read -p "Label (optional): " label; \
+	python -c "from services.spec_versioning import create_snapshot; print(create_snapshot('$$type', '$$label' or None))"
+
+spec-bump:
+	@echo "📈 Bumping spec version..."
+	@read -p "Spec type: " type; \
+	read -p "Bump (major/minor/patch): " part; \
+	python -c "from services.spec_versioning import bump_version; print(bump_version('$$type', '$$part'))"
 
 # ===========================================
 # Build & Deploy
