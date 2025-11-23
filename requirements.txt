@@ -25,8 +25,9 @@ jsonschema==4.21.1
 python-dotenv==1.0.0
 httpx==0.26.0
 
-# Event Bus
+# Event Bus & Streaming
 redis==5.0.1
+confluent-kafka==2.3.0
 
 # GitHub Integration
 PyGithub==2.1.1

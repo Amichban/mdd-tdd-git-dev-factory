@@ -59,6 +59,10 @@ help:
 	@echo "    make db-migrate   - Run database migrations"
 	@echo "    make db-reset     - Reset database"
 	@echo ""
+	@echo "  Kafka:"
+	@echo "    make kafka-topics - Create Kafka topics"
+	@echo "    make kafka-list   - List Kafka topics"
+	@echo ""
 	@echo "  Utilities:"
 	@echo "    make feedback     - Add problems/enhancements"
 	@echo "    make clean        - Remove all containers and volumes"
@@ -275,6 +279,19 @@ db-reset:
 	docker compose up -d db
 	sleep 5
 	make db-migrate
+
+# ===========================================
+# Kafka
+# ===========================================
+
+kafka-topics:
+	@echo "📨 Creating Kafka topics..."
+	python -c "from services.kafka_service import init_kafka_topics; init_kafka_topics()"
+	@echo "✅ Kafka topics created"
+
+kafka-list:
+	@echo "📋 Listing Kafka topics..."
+	docker compose exec kafka kafka-topics --bootstrap-server localhost:9092 --list
 
 # ===========================================
 # Cleanup
