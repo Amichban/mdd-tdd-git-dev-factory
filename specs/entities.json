@@ -1,0 +1,138 @@
+{
+  "$schema": "./schema/entity.schema.json",
+  "version": "1.0.0",
+  "entities": [
+    {
+      "name": "RawDataSource",
+      "description": "External data source configuration for ingestion pipelines",
+      "layer": "infrastructure",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "primary_key": true,
+          "description": "Unique identifier"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "max_length": 100,
+          "description": "Human-readable name for the data source"
+        },
+        {
+          "name": "source_type",
+          "type": "enum",
+          "required": true,
+          "values": ["database", "api", "file", "stream", "webhook"],
+          "description": "Type of data source"
+        },
+        {
+          "name": "connection_string",
+          "type": "string",
+          "required": true,
+          "sensitive": true,
+          "description": "Connection string or URL (encrypted at rest)"
+        },
+        {
+          "name": "schema_definition",
+          "type": "json",
+          "required": false,
+          "description": "JSON schema of the expected data format"
+        },
+        {
+          "name": "refresh_interval",
+          "type": "integer",
+          "required": false,
+          "default": 3600,
+          "min": 60,
+          "description": "How often to pull data (seconds)"
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "required": true,
+          "default": true,
+          "description": "Whether the source is currently active"
+        },
+        {
+          "name": "last_sync_at",
+          "type": "datetime",
+          "required": false,
+          "description": "Timestamp of last successful sync"
+        },
+        {
+          "name": "sync_status",
+          "type": "enum",
+          "required": true,
+          "default": "pending",
+          "values": ["pending", "syncing", "success", "failed"],
+          "description": "Current sync status"
+        },
+        {
+          "name": "error_message",
+          "type": "string",
+          "required": false,
+          "description": "Last error message if sync failed"
+        },
+        {
+          "name": "metadata",
+          "type": "json",
+          "required": false,
+          "description": "Additional configuration options"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "required": true,
+          "auto_now_add": true,
+          "description": "Creation timestamp"
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "required": true,
+          "auto_now": true,
+          "description": "Last update timestamp"
+        }
+      ],
+      "indexes": [
+        {
+          "fields": ["name"],
+          "unique": true
+        },
+        {
+          "fields": ["source_type", "is_active"]
+        },
+        {
+          "fields": ["sync_status"]
+        }
+      ],
+      "api": {
+        "generate": true,
+        "endpoints": ["list", "get", "create", "update", "delete"],
+        "custom_endpoints": [
+          {
+            "name": "sync",
+            "method": "POST",
+            "path": "/{id}/sync",
+            "description": "Trigger manual sync for this data source"
+          },
+          {
+            "name": "test_connection",
+            "method": "POST",
+            "path": "/{id}/test",
+            "description": "Test the connection without syncing"
+          }
+        ]
+      },
+      "ui": {
+        "icon": "database",
+        "color": "#3B82F6",
+        "list_fields": ["name", "source_type", "sync_status", "last_sync_at"],
+        "search_fields": ["name"],
+        "filter_fields": ["source_type", "is_active", "sync_status"]
+      }
+    }
+  ]
+}

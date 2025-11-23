@@ -1,0 +1,5 @@
+{
+  "$schema": "./schema/algorithm.schema.json",
+  "version": "1.0.0",
+  "algorithms": []
+}

@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: dev-platform-db
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_DB: ${DB_NAME:-quantx}
+    ports:
+      - "${DB_PORT:-5434}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dev-platform
+
+  # Redis for Event Bus
+  redis:
+    image: redis:7-alpine
+    container_name: dev-platform-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dev-platform
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+    container_name: dev-platform-backend
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-quantx}
+      REDIS_URL: redis://redis:6379
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GITHUB_REPO: ${GITHUB_REPO:-}
+      ENV: ${ENV:-development}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      # Mount source for hot reload in development
+      - ./src:/app/src:ro
+      - ./services:/app/services:ro
+      - ./rules:/app/rules:ro
+      - ./specs:/app/specs:ro
+      - ./generators:/app/generators:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - dev-platform
+    # Development override: enable hot reload
+    command: uvicorn src.app.api.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+    container_name: dev-platform-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:${BACKEND_PORT:-8000}
+      NODE_ENV: ${NODE_ENV:-development}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    volumes:
+      # Mount source for hot reload in development
+      - ./src/app:/app/src/app:ro
+      - ./public:/app/public:ro
+    depends_on:
+      - backend
+    networks:
+      - dev-platform
+
+  # Test Runner (on-demand)
+  test:
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+    container_name: dev-platform-test
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-quantx}_test
+      REDIS_URL: redis://redis:6379
+      ENV: test
+    volumes:
+      - ./src:/app/src:ro
+      - ./services:/app/services:ro
+      - ./tests:/app/tests:ro
+      - ./specs:/app/specs:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - dev-platform
+    profiles:
+      - test
+    command: pytest tests/ -v --cov=src --cov-report=term-missing
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  dev-platform:
+    driver: bridge

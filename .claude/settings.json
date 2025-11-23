@@ -1,0 +1,27 @@
+{
+  "model": "claude-sonnet-4-5-20250929",
+  "permissions": {
+    "allow": [
+      "Read",
+      "Write",
+      "Edit",
+      "Bash",
+      "Glob",
+      "Grep",
+      "WebFetch"
+    ],
+    "deny": []
+  },
+  "skills": {
+    "enabled": true,
+    "path": ".claude/skills"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "command": ".claude/hooks/pre-commit-check.sh"
+      }
+    ]
+  }
+}

@@ -1,0 +1,75 @@
+# Auto-merge rules configuration
+# These rules determine when PRs can be automatically merged
+
+rules:
+  # Low-risk changes: auto-merge if all checks pass
+  - name: "Low-risk entity changes"
+    conditions:
+      - label: "low-risk"
+      - checks_pass: true
+      - no_conflicts: true
+    action: auto_merge
+    merge_method: squash
+
+  # Dependency updates: auto-merge if tests pass
+  - name: "Dependency updates"
+    conditions:
+      - label: "dependencies"
+      - checks_pass: true
+      - no_conflicts: true
+      - author: "dependabot[bot]"
+    action: auto_merge
+    merge_method: squash
+
+  # Documentation changes: auto-merge
+  - name: "Documentation only"
+    conditions:
+      - label: "documentation"
+      - checks_pass: true
+      - files_match: "*.md"
+    action: auto_merge
+    merge_method: squash
+
+  # Medium-risk changes: require 1 reviewer
+  - name: "Medium-risk changes"
+    conditions:
+      - label: "medium-risk"
+      - checks_pass: true
+    action: require_review
+    reviewers: 1
+
+  # High-risk changes: require 2 reviewers
+  - name: "High-risk changes"
+    conditions:
+      - or:
+        - label: "high-risk"
+        - label: "breaking-change"
+        - files_match: "specs/workflows.json"
+    action: require_review
+    reviewers: 2
+
+  # Security changes: require security team
+  - name: "Security changes"
+    conditions:
+      - label: "security"
+    action: require_review
+    reviewers:
+      - team: "security"
+    dismiss_stale: true
+
+# Risk classification for auto-labeling
+risk_classification:
+  low:
+    - "Add property to entity"
+    - "Update description"
+    - "Fix typo"
+    - "Update documentation"
+  medium:
+    - "Modify calculation"
+    - "Add new entity"
+    - "Change relationship"
+  high:
+    - "Modify workflow"
+    - "Delete entity"
+    - "Change security settings"
+    - "Modify infrastructure"

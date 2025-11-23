@@ -1,0 +1,156 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "workflow.schema.json",
+  "title": "Workflow Schema",
+  "description": "Schema for defining process workflows and state machines",
+  "type": "object",
+  "required": ["workflows"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "workflows": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Workflow"
+      }
+    }
+  },
+  "definitions": {
+    "Workflow": {
+      "type": "object",
+      "required": ["id", "name", "description", "states", "transitions"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^workflow_[a-z][a-z0-9_]*$",
+          "description": "Unique identifier prefixed with workflow_"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "trigger": {
+          "$ref": "#/definitions/Trigger"
+        },
+        "states": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/State"
+          }
+        },
+        "transitions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Transition"
+          }
+        },
+        "sla": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "SLA definitions for state transitions"
+        }
+      }
+    },
+    "Trigger": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["event", "schedule", "manual", "condition"]
+        },
+        "event": {
+          "type": "string"
+        },
+        "schedule": {
+          "type": "string"
+        },
+        "condition": {
+          "type": "string"
+        }
+      }
+    },
+    "State": {
+      "type": "object",
+      "required": ["id", "name", "type"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["initial", "intermediate", "final"]
+        },
+        "description": {
+          "type": "string"
+        },
+        "onEnter": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Actions to execute when entering state"
+        },
+        "onExit": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Actions to execute when exiting state"
+        }
+      }
+    },
+    "Transition": {
+      "type": "object",
+      "required": ["id", "name", "from", "to", "trigger"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "name": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "trigger": {
+          "type": "string",
+          "enum": ["user_action", "analyst_action", "trader_action", "system_action", "timer", "condition"]
+        },
+        "timerDuration": {
+          "type": "string",
+          "description": "Duration for timer triggers (e.g., '1h', '30m')"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

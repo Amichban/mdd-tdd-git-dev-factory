@@ -1,0 +1,46 @@
+# Dependencies
+node_modules
+__pycache__
+*.pyc
+.venv
+venv
+
+# Build outputs
+.next
+.vercel
+dist
+build
+htmlcov
+coverage.xml
+
+# Development
+.git
+.github
+.claude
+.githooks
+*.md
+!README.md
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Testing
+.pytest_cache
+.mypy_cache
+.coverage
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,118 @@
+{
+  "$schema": "./schema/roles.schema.json",
+  "version": "1.0.0",
+  "roles": [
+    {
+      "id": "cio",
+      "name": "CIO",
+      "title": "Chief Investment Officer",
+      "responsibility": "Defines investment philosophy, asset universe, and leverage limits",
+      "execution": "The Decision Maker: Decides what to trade and how much capital to deploy",
+      "workbench_zones": {
+        "pulse": ["portfolio_overview", "risk_alerts", "capital_allocation"],
+        "canvas": ["strategy_diagram", "performance_charts", "universe_editor"],
+        "copilot": ["scenario_analysis", "what_if_modeling"]
+      },
+      "tools": ["Notion", "Obsidian", "Excel", "Draw.io"],
+      "data_access": ["all_portfolios", "risk_metrics", "market_data"]
+    },
+    {
+      "id": "quant_researcher",
+      "name": "Quant Researcher",
+      "title": "Quantitative Researcher",
+      "responsibility": "Finds Alpha by analyzing historical data and testing hypotheses",
+      "execution": "The Data Scientist: Spends time cleaning data, reading whitepapers, and backtesting ideas",
+      "workbench_zones": {
+        "pulse": ["research_queue", "backtest_results", "hypothesis_tracker"],
+        "canvas": ["jupyter_notebook", "data_explorer", "backtest_viewer"],
+        "copilot": ["literature_search", "data_quality_checks", "statistical_tests"]
+      },
+      "tools": ["Python", "Pandas", "NumPy", "JupyterLab", "Alphalens", "VectorBT"],
+      "data_access": ["historical_data", "fundamental_data", "alternative_data"]
+    },
+    {
+      "id": "quant_developer",
+      "name": "Quant Developer",
+      "title": "Quantitative Developer",
+      "responsibility": "Builds trading infrastructure and production-grade code",
+      "execution": "The Architect: Writes the Live Engine that connects research code to APIs",
+      "workbench_zones": {
+        "pulse": ["build_status", "deployment_queue", "code_reviews"],
+        "canvas": ["code_editor", "architecture_diagram", "api_docs"],
+        "copilot": ["code_generation", "refactoring_suggestions", "test_coverage"]
+      },
+      "tools": ["VS Code", "Docker", "GitHub", "CI/CD Pipelines"],
+      "data_access": ["code_repos", "infrastructure_configs", "api_specs"]
+    },
+    {
+      "id": "portfolio_manager",
+      "name": "Portfolio Manager",
+      "title": "Portfolio Manager",
+      "responsibility": "Sizes positions and manages trade lifecycle based on signals",
+      "execution": "The Algorithm: Code calculates position sizes and rebalances automatically",
+      "workbench_zones": {
+        "pulse": ["signal_queue", "position_alerts", "execution_status"],
+        "canvas": ["position_grid", "rebalance_preview", "execution_log"],
+        "copilot": ["position_sizing", "risk_attribution", "order_routing"]
+      },
+      "tools": ["Python Execution Scripts", "CCXT", "IB_insync"],
+      "data_access": ["signals", "positions", "executions", "market_data"]
+    },
+    {
+      "id": "risk_manager",
+      "name": "Risk Manager",
+      "title": "Risk Manager",
+      "responsibility": "Monitors exposure and enforces limits",
+      "execution": "The Guardrails: Rejects orders if they violate safety rules",
+      "workbench_zones": {
+        "pulse": ["risk_breaches", "exposure_alerts", "margin_warnings"],
+        "canvas": ["risk_dashboard", "var_analysis", "stress_tests"],
+        "copilot": ["limit_check", "scenario_simulation", "hedge_recommendations"]
+      },
+      "tools": ["Python Decorators", "Broker Risk Navigator", "PagerDuty"],
+      "data_access": ["positions", "market_data", "risk_limits", "var_models"]
+    },
+    {
+      "id": "head_of_ops",
+      "name": "Head of Operations",
+      "title": "Head of Operations",
+      "responsibility": "Reconciles trades and handles settlements",
+      "execution": "The Cron Job: Script runs daily to compare logs with broker reports",
+      "workbench_zones": {
+        "pulse": ["reconciliation_queue", "breaks", "settlement_status"],
+        "canvas": ["recon_grid", "break_analysis", "settlement_calendar"],
+        "copilot": ["break_resolution", "report_generation", "audit_trail"]
+      },
+      "tools": ["Pandas", "Slack API", "Telegram API"],
+      "data_access": ["trades", "broker_reports", "positions", "cash"]
+    },
+    {
+      "id": "sysadmin",
+      "name": "SysAdmin/DevOps",
+      "title": "System Administrator",
+      "responsibility": "Ensures 24/7 uptime, low latency, and server health",
+      "execution": "The Cloud Engineer: Manages virtual servers for stability during volatility",
+      "workbench_zones": {
+        "pulse": ["system_alerts", "service_status", "deployment_queue"],
+        "canvas": ["infrastructure_graph", "metrics_dashboard", "log_viewer"],
+        "copilot": ["incident_response", "capacity_planning", "cost_optimization"]
+      },
+      "tools": ["AWS EC2", "DigitalOcean", "Linux", "Grafana", "Prometheus"],
+      "data_access": ["system_metrics", "logs", "infrastructure_config", "costs"]
+    },
+    {
+      "id": "data_engineer",
+      "name": "Data Engineer",
+      "title": "Data Engineer",
+      "responsibility": "Ingests, cleans, and stores market data",
+      "execution": "The Librarian: Maintains a Clean Data Lake to prevent backtesting on bad data",
+      "workbench_zones": {
+        "pulse": ["ingestion_status", "quality_alerts", "gap_queue"],
+        "canvas": ["data_lineage", "quality_heatmap", "pipeline_diagram"],
+        "copilot": ["gap_filling", "schema_inference", "quality_checks"]
+      },
+      "tools": ["PostgreSQL", "TimescaleDB", "Parquet", "Polygon.io", "Alpaca"],
+      "data_access": ["raw_data", "data_catalog", "quality_metrics", "vendor_apis"]
+    }
+  ]
+}

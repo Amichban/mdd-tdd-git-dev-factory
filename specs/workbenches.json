@@ -1,0 +1,108 @@
+{
+  "$schema": "./schema/workbench.schema.json",
+  "version": "1.0.0",
+  "workbenches": [
+    {
+      "name": "DataSourceWorkbench",
+      "description": "Manage and monitor raw data sources",
+      "entity": "RawDataSource",
+      "role": "data-engineer",
+      "layout": {
+        "style": "bento",
+        "zones": {
+          "A": {
+            "name": "Pulse",
+            "width": "20%",
+            "components": [
+              {
+                "type": "stats_card",
+                "title": "Active Sources",
+                "metric": "count",
+                "filter": { "is_active": true }
+              },
+              {
+                "type": "stats_card",
+                "title": "Failed Syncs",
+                "metric": "count",
+                "filter": { "sync_status": "failed" },
+                "alert_threshold": 1
+              },
+              {
+                "type": "activity_feed",
+                "title": "Recent Activity",
+                "events": ["sync_started", "sync_completed", "sync_failed"],
+                "limit": 10
+              }
+            ]
+          },
+          "B": {
+            "name": "Canvas",
+            "width": "50%",
+            "components": [
+              {
+                "type": "data_table",
+                "title": "Data Sources",
+                "columns": ["name", "source_type", "sync_status", "last_sync_at"],
+                "actions": ["edit", "delete", "sync", "test_connection"],
+                "row_click": "open_detail",
+                "search": true,
+                "filters": ["source_type", "is_active", "sync_status"],
+                "pagination": true
+              }
+            ]
+          },
+          "C": {
+            "name": "Co-Pilot",
+            "width": "30%",
+            "components": [
+              {
+                "type": "detail_panel",
+                "title": "Source Details",
+                "sections": [
+                  {
+                    "name": "Configuration",
+                    "fields": ["name", "source_type", "connection_string", "refresh_interval"]
+                  },
+                  {
+                    "name": "Schema",
+                    "fields": ["schema_definition"],
+                    "display": "code"
+                  },
+                  {
+                    "name": "Status",
+                    "fields": ["sync_status", "last_sync_at", "error_message"]
+                  }
+                ]
+              },
+              {
+                "type": "explainability",
+                "title": "Sync History",
+                "event_types": ["job_started", "job_completed", "job_failed", "decision_evaluated"]
+              }
+            ]
+          }
+        }
+      },
+      "actions": [
+        {
+          "name": "Create Source",
+          "icon": "plus",
+          "type": "modal",
+          "form": "create"
+        },
+        {
+          "name": "Sync All",
+          "icon": "refresh",
+          "type": "bulk_action",
+          "endpoint": "/api/raw-data-sources/sync-all",
+          "confirm": true
+        }
+      ],
+      "shortcuts": [
+        { "key": "n", "action": "Create Source" },
+        { "key": "r", "action": "Refresh" },
+        { "key": "/", "action": "Search" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "roles.schema.json",
+  "title": "Roles Schema",
+  "description": "Schema for defining platform roles and their workbench configurations",
+  "type": "object",
+  "required": ["version", "roles"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "roles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "title", "responsibility", "execution", "workbench_zones", "tools", "data_access"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z_]+$",
+            "description": "Unique identifier for the role"
+          },
+          "name": {
+            "type": "string",
+            "description": "Short display name"
+          },
+          "title": {
+            "type": "string",
+            "description": "Full formal title"
+          },
+          "responsibility": {
+            "type": "string",
+            "description": "Core responsibility of the role"
+          },
+          "execution": {
+            "type": "string",
+            "description": "How this role executes in practice"
+          },
+          "workbench_zones": {
+            "type": "object",
+            "description": "Bento layout zone configurations",
+            "required": ["pulse", "canvas", "copilot"],
+            "properties": {
+              "pulse": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Components for Zone A (left, situational awareness)"
+              },
+              "canvas": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Components for Zone B (center, deep work)"
+              },
+              "copilot": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Components for Zone C (right, agent & context)"
+              }
+            }
+          },
+          "tools": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Recommended tools for this role"
+          },
+          "data_access": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Data sources this role can access"
+          }
+        }
+      }
+    }
+  }
+}

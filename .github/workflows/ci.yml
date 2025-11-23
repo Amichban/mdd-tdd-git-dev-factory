@@ -1,0 +1,189 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality-gates:
+    name: Quality Gates
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov ruff mypy pydantic fastapi
+
+      # Security Checks
+      - name: Secret Scanning
+        uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --only-verified
+
+      - name: Dependency Vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+
+      # Code Quality
+      - name: Lint with Ruff
+        run: ruff check . --output-format=github
+
+      - name: Type Check with MyPy
+        run: mypy src generators --ignore-missing-imports
+        continue-on-error: true
+
+      # Validate Specs
+      - name: Validate JSON Specs
+        run: python generators/generate_all.py --validate-only
+
+      # Generate Code
+      - name: Generate Code from Specs
+        run: python generators/generate_all.py
+
+      # Verify spec-to-code consistency
+      - name: Verify Generated Code Matches Specs
+        run: |
+          echo "Checking that generated code matches specs..."
+          # Regenerate and check for differences
+          python generators/generate_all.py
+          if git diff --exit-code src/domain/models/ src/app/api/; then
+            echo "✅ Generated code is consistent with specs"
+          else
+            echo "❌ Generated code differs from specs!"
+            echo "This means either:"
+            echo "  1. Generated files were manually edited (not allowed)"
+            echo "  2. Specs were changed but code wasn't regenerated"
+            echo ""
+            echo "Fix: Run 'python generators/generate_all.py' and commit the results"
+            exit 1
+          fi
+
+      # Tests (must pass)
+      - name: Run Tests
+        run: pytest tests/ -v --cov=src --cov-report=xml --cov-fail-under=80
+
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: quality-gates
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: dev-platform:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Verify PR has linked issue
+  verify-issue:
+    name: Verify Issue Linked
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Check branch naming convention
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          echo "Branch: $BRANCH"
+
+          # Check branch naming
+          if [[ ! "$BRANCH" =~ ^(feat|fix|refactor|docs|test|chore)/issue-[0-9]+-[a-z0-9-]+$ ]]; then
+            echo "❌ Branch name doesn't follow convention"
+            echo "Expected: feat/issue-123-description"
+            echo "Got: $BRANCH"
+            exit 1
+          fi
+
+          echo "✅ Branch name follows convention"
+
+      - name: Extract and verify issue number
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          ISSUE_NUMBER=$(echo "$BRANCH" | grep -oE 'issue-[0-9]+' | grep -oE '[0-9]+')
+
+          if [ -z "$ISSUE_NUMBER" ]; then
+            echo "❌ Could not extract issue number from branch"
+            exit 1
+          fi
+
+          echo "Issue number: #$ISSUE_NUMBER"
+
+          # Verify issue exists
+          ISSUE_STATE=$(gh issue view "$ISSUE_NUMBER" --repo ${{ github.repository }} --json state -q '.state' 2>/dev/null || echo "NOT_FOUND")
+
+          if [ "$ISSUE_STATE" == "NOT_FOUND" ]; then
+            echo "❌ Issue #$ISSUE_NUMBER not found"
+            exit 1
+          fi
+
+          echo "✅ Issue #$ISSUE_NUMBER exists (state: $ISSUE_STATE)"
+
+      - name: Check PR body references issue
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          ISSUE_NUMBER=$(echo "$BRANCH" | grep -oE 'issue-[0-9]+' | grep -oE '[0-9]+')
+          PR_BODY="${{ github.event.pull_request.body }}"
+
+          if echo "$PR_BODY" | grep -qE "(#$ISSUE_NUMBER|closes #$ISSUE_NUMBER|fixes #$ISSUE_NUMBER)"; then
+            echo "✅ PR body references issue #$ISSUE_NUMBER"
+          else
+            echo "⚠️ PR body should reference issue #$ISSUE_NUMBER"
+            echo "Add 'Closes #$ISSUE_NUMBER' to automatically close the issue on merge"
+          fi
+
+  auto-merge:
+    name: Auto-merge
+    runs-on: ubuntu-latest
+    needs: [quality-gates, build, verify-issue]
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Check auto-merge eligibility
+        id: check
+        run: |
+          # Check if PR has auto-merge label
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'auto-merge') }}" == "true" ]]; then
+            echo "eligible=true" >> $GITHUB_OUTPUT
+          else
+            echo "eligible=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Auto-merge PR
+        if: steps.check.outputs.eligible == 'true'
+        uses: pascalgn/automerge-action@v0.15.6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MERGE_METHOD: squash
+          MERGE_LABELS: auto-merge
