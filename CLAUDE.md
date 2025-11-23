@@ -140,3 +140,120 @@ make dev  # Starts all services
 - Tests with 80% coverage minimum
 - Issue linking verification
 - Auto-merge for low-risk changes with passing tests
+
+## Project Rules
+
+### Skills
+Four skills guide the development process:
+1. **domain-expert** - Idea → Specification
+2. **ontology-expert** - Specification → JSON Specs
+3. **uiux-specialist** - Specs → Workbench layouts
+4. **ai-augmentation** - Human-AI collaboration patterns
+
+### Code Standards
+
+#### Python Code
+- Use type hints
+- Follow PEP 8
+- Use Pydantic for models
+- Use pytest for tests
+
+#### TypeScript Code
+- Use strict mode
+- Define interfaces for all data
+- Use React functional components
+- Follow ESLint rules
+
+### Security
+
+#### Never Commit
+- Secrets, API keys, passwords
+- .env files with real values
+- Credentials of any kind
+
+#### Always Use
+- Environment variables for secrets
+- JSON Schema validation
+- Input sanitization
+- Type checking
+
+### Slash Commands
+- `/new-idea` - Start domain expert skill
+- `/to-ontology` - Generate JSON specs
+- `/design-workbench` - Design UI layout
+- `/generate` - Run all generators
+- `/status` - Show GitHub project state
+- `/deploy` - Trigger deployment
+
+### File Modification Rules
+
+#### Editable
+- `specs/*.json` - Via Model Editor UI or skills
+- `.claude/skills/*.md` - Skill definitions
+- `tests/` - Test files
+- `services/` - Service implementations
+
+#### Generated (Do Not Edit)
+- `src/domain/models/` - From entities.json
+- `src/app/api/` - From entities.json + workflows.json
+- `src/components/` - From workbenches.json
+
+### Testing
+
+#### Unit Tests
+- Test each algorithm independently
+- Test entity validations
+- Test action preconditions
+
+#### Integration Tests
+- Test workflow transitions
+- Test API endpoints
+- Test database operations
+
+#### E2E Tests
+- Test complete user journeys
+- Test workbench interactions
+
+## 9-Box Platform Architecture
+
+Every feature must be specified across all 9 boxes in 3 systems.
+
+### System 1: Registry (What We Have)
+| Box | Claude Code Feature | Maps To |
+|-----|---------------------|---------|
+| 1. Entity Catalog | MCP Resources | `specs/entities.json`, MCP servers |
+| 2. Task Library | Agent Skills | `.claude/skills/`, `specs/algorithms.json` |
+| 3. Policy Vault | Hooks & Config | `.githooks/`, `.claude/hooks/` |
+
+### System 2: Engine (How It Runs)
+| Box | Claude Code Feature | Maps To |
+|-----|---------------------|---------|
+| 4. Scheduler | GitHub Actions | `.github/workflows/` |
+| 5. Workers | Headless Mode | `services/`, `claude -p "..."` |
+| 6. Broadcaster | PostToolUse Hooks | `.claude/hooks/post-*.sh` |
+
+### System 3: Observer (How It Learns)
+| Box | Claude Code Feature | Maps To |
+|-----|---------------------|---------|
+| 7. Signal Ingestor | MCP Event Bus | MCP SSE streams |
+| 8. Reasoning Core | Subagents | `.claude/agents/` |
+| 9. Command Center | Slash Commands | `.claude/commands/` |
+
+### The Three Contracts
+
+#### Contract 1: Graph (Registry)
+Typed business graph nodes with lineage.
+
+#### Contract 2: Signal (Observer)
+Traceable telemetry events with correlation IDs.
+
+#### Contract 3: GenUI (Interaction)
+Safe UI widget configurations for slash commands.
+
+### Usage
+
+```bash
+claude @architect "I need to add data quality checks"
+```
+
+Output: `specs/architecture/feature-name.json`

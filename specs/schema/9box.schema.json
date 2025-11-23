@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "9-Box Architecture Spec Schema",
+  "description": "Complete specification for a feature across all 9 boxes",
+  "type": "object",
+  "required": ["feature", "user_story", "graph_nodes", "boxes"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "feature": { "type": "string" },
+    "user_story": { "type": "string" },
+    "graph_nodes": {
+      "type": "array",
+      "items": { "$ref": "graph.schema.json#/definitions/GraphNode" }
+    },
+    "graph_edges": {
+      "type": "array",
+      "items": { "$ref": "graph.schema.json#/definitions/GraphEdge" }
+    },
+    "boxes": {
+      "type": "object",
+      "required": ["registry", "engine", "observer"],
+      "properties": {
+        "registry": { "$ref": "#/definitions/RegistrySystem" },
+        "engine": { "$ref": "#/definitions/EngineSystem" },
+        "observer": { "$ref": "#/definitions/ObserverSystem" }
+      }
+    },
+    "signals": { "type": "array" },
+    "ui_widgets": { "type": "array" },
+    "implementation_order": { "type": "array", "items": { "type": "string" } }
+  },
+  "definitions": {
+    "BoxSpec": {
+      "type": "object",
+      "required": ["affected"],
+      "properties": {
+        "affected": { "type": "boolean" },
+        "reason": { "type": "string" }
+      }
+    },
+    "RegistrySystem": {
+      "type": "object",
+      "properties": {
+        "entity_catalog": { "type": "object" },
+        "task_library": { "type": "object" },
+        "policy_vault": { "type": "object" }
+      }
+    },
+    "EngineSystem": {
+      "type": "object",
+      "properties": {
+        "scheduler": { "type": "object" },
+        "workers": { "type": "object" },
+        "broadcaster": { "type": "object" }
+      }
+    },
+    "ObserverSystem": {
+      "type": "object",
+      "properties": {
+        "signal_ingestor": { "type": "object" },
+        "reasoning_core": { "type": "object" },
+        "command_center": { "type": "object" }
+      }
+    }
+  }
+}

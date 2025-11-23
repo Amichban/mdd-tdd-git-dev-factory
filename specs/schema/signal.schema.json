@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Signal Contract Schema",
+  "description": "Contract 2: Traceable Telemetry Event for Observer System",
+  "type": "object",
+  "required": ["event_id", "correlation_id", "timestamp", "source", "type", "payload"],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "pattern": "^evt_[a-f0-9]+$"
+    },
+    "correlation_id": {
+      "type": "string",
+      "pattern": "^run_[a-z0-9_]+$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "object",
+      "required": ["system", "component", "node_ref"],
+      "properties": {
+        "system": { "type": "string", "enum": ["REGISTRY", "ENGINE", "OBSERVER"] },
+        "component": { "type": "string" },
+        "node_ref": { "type": "string" }
+      }
+    },
+    "type": {
+      "type": "string",
+      "enum": ["STATUS_CHANGE", "METRIC_UPDATE", "ALERT", "DECISION", "RESULT"]
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "previous_status": { "type": "string" },
+        "new_status": { "type": "string" },
+        "severity": { "type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"] },
+        "summary": { "type": "string" },
+        "logs_url": { "type": "string", "format": "uri-reference" },
+        "metrics": { "type": "object" },
+        "decision": {
+          "type": "object",
+          "properties": {
+            "condition": { "type": "boolean" },
+            "reason": { "type": "string" },
+            "impact": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

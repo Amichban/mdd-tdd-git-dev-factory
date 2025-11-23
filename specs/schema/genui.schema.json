@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GenUI Contract Schema",
+  "description": "Contract 3: Widget Configuration for safe UI interaction",
+  "type": "object",
+  "required": ["protocol", "widget_type", "props"],
+  "properties": {
+    "protocol": {
+      "type": "string",
+      "const": "genui_v1"
+    },
+    "widget_type": {
+      "type": "string",
+      "enum": ["ACTION_CARD", "DATA_TABLE", "CHART", "FORM", "ALERT", "STATUS_BADGE", "TIMELINE"]
+    },
+    "props": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "risk_level": { "type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"] },
+        "actions": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Action" }
+        },
+        "data": { "type": "object" },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": { "type": "string" },
+              "label": { "type": "string" },
+              "type": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Action": {
+      "type": "object",
+      "required": ["label", "command"],
+      "properties": {
+        "label": { "type": "string" },
+        "style": { "type": "string", "enum": ["PRIMARY", "SECONDARY", "GHOST", "DANGER"], "default": "PRIMARY" },
+        "command": { "type": "string", "pattern": "^/[a-z-]+$" },
+        "params": { "type": "object" },
+        "confirm": { "type": "boolean", "default": false }
+      }
+    }
+  }
+}
